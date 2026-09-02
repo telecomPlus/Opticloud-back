@@ -1,5 +1,43 @@
 const Patient = require('../models/Patient');
 
+
+// GET: Obtener todos los pacientes
+const getPatients = async (req, res) => {
+    try {
+        const patients = await Patient.find();
+        
+        // Retornar directamente el arreglo en lugar del objeto envuelto
+        return res.status(200).json(patients);
+    } catch (error) {
+        return res.status(500).json({ 
+            message: 'Error al obtener los pacientes', 
+            error: error.message 
+        });
+    }
+};
+
+// GET: Obtener un solo paciente por ID
+const getPatientById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const patient = await Patient.findById(id);
+
+    if (!patient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Paciente no encontrado'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: patient
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updatePatient = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -59,4 +97,33 @@ const createPatient = async (req, res, next) => {
   }
 };
 
-module.exports = { createPatient, updatePatient };
+const deletePatient = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deletedPatient = await Patient.findByIdAndDelete(id);
+
+    if (!deletedPatient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Paciente no encontrado'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Paciente eliminado correctamente',
+      data: deletedPatient
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { 
+  getPatients, 
+  getPatientById, 
+  createPatient, 
+  updatePatient,
+  deletePatient
+};
