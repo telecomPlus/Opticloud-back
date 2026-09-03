@@ -10,7 +10,7 @@ const getPatients = async (req, res) => {
         return res.status(200).json(patients);
     } catch (error) {
         return res.status(500).json({ 
-            message: 'Error al obtener los pacientes', 
+            message: 'Error al obtener los pacientes.', 
             error: error.message 
         });
     }
@@ -25,7 +25,7 @@ const getPatientById = async (req, res, next) => {
     if (!patient) {
       return res.status(404).json({
         success: false,
-        message: 'Paciente no encontrado'
+        message: 'Paciente no encontrado en la base de '
       });
     }
 
@@ -52,7 +52,7 @@ const updatePatient = async (req, res, next) => {
     if (!updatedPatient) {
       return res.status(404).json({
         success: false,
-        message: 'Paciente no encontrado'
+        message: 'Paciente no encontrado en la base de datos.'
       });
     }
 
@@ -63,7 +63,7 @@ const updatePatient = async (req, res, next) => {
     });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ success: false, message: 'El email ya está registrado por otro paciente.' });
+      return res.status(400).json({ success: false, message: 'El email ingresado ya está registrado por otro paciente.' });
     }
     next(error);
   }

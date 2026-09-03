@@ -9,7 +9,7 @@ const createExam = async (req, res, next) => {
     if (!patientExists) {
       return res.status(404).json({
         success: false,
-        message: 'El paciente especificado no existe en la base de datos'
+        message: 'El paciente especificado no existe en el sistema.'
       });
     }
 
@@ -17,7 +17,7 @@ const createExam = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      message: 'Examen registrado exitosamente',
+      message: 'Examen registrado exitosamente.',
       data: newExam
     });
   } catch (error) {
@@ -33,7 +33,7 @@ const getPatientExams = async (req, res, next) => {
     if (!patientExists) {
       return res.status(404).json({
         success: false,
-        message: 'El paciente especificado no existe'
+        message: 'El paciente especificado no existe en el sistema.'
       });
     }
 
@@ -51,7 +51,7 @@ const getPatientExams = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: 'Historial de exámenes recuperado exitosamente',
+      message: 'Historial de exámenes recuperado exitosamente.',
       count: exams.length,
       data: exams
     });
