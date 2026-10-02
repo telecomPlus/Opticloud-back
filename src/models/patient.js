@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 
 const patientSchema = new mongoose.Schema(
   {
+
+    documentNumber: {
+      type: String,
+      required: [true, 'El número de identificación es requerido'],
+      trim: true,
+    },
     name: {
       type: String,
       required: [true, 'El nombre completo es requerido'],

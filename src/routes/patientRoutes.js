@@ -32,7 +32,7 @@ router.post(
     body('email').isEmail().withMessage('El formato del email es inválido'),
     body('phone').isNumeric().withMessage('El teléfono solo debe contener números').isLength({ min: 7, max: 15 }).withMessage('El teléfono debe tener entre 7 y 15 dígitos'),
     body('address').optional().isString().withMessage('La dirección debe ser una cadena de texto'),
-    body('documentNumber').notEmpty().withMessage('El número de documento es obligatorio'),
+    body('documentNumber').notEmpty().withMessage('El número de documento es obligatorio').isLength({ min: 5, max: 15 }).withMessage('El número de documento debe tener entre 5 y 15 dígitos'),
     validateRequest
   ],
   createPatient
@@ -46,6 +46,9 @@ router.put(
     body('email').optional().isEmail().withMessage('El formato del email es inválido'),
     body('phone').optional().isNumeric().withMessage('El teléfono solo debe contener números').isLength({ min: 7, max: 15 }).withMessage('El teléfono debe tener entre 7 y 15 dígitos'),
     body('address').optional().isString().withMessage('La dirección debe ser una cadena de texto'),
+    body('documentNumber')
+      .optional()
+      .isLength({ min: 5, max: 15 }).withMessage('El número de documento debe tener entre 5 y 15 dígitos'),
     validateRequest
   ],
   updatePatient
