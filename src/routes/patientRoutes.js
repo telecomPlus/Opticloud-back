@@ -17,10 +17,12 @@ const router = express.Router();
 router.get('/', getPatients);
 
 // Obtener un paciente específico por ID
+// Obtener un paciente específico por ID
 router.get(
   '/:id',
   [
-    param('id').isMongoId().withMessage('ID de paciente inválido')
+    param('id').isMongoId().withMessage('ID de paciente inválido'),
+    validateRequest
   ],
   getPatientById
 );
