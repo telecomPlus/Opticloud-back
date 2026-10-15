@@ -1,4 +1,4 @@
-const Patient = require('../models/Patient');
+const Patient = require('../models/patient');
 
 
 // GET: Obtener todos los pacientes
@@ -17,6 +17,7 @@ const getPatients = async (req, res) => {
 };
 
 // GET: Obtener un solo paciente por ID
+// GET: Obtener un solo paciente por ID
 const getPatientById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -25,11 +26,11 @@ const getPatientById = async (req, res, next) => {
     if (!patient) {
       return res.status(404).json({
         success: false,
-        message: 'Paciente no encontrado en la base de '
+        message: 'Paciente no encontrado en la base de datos.'
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: patient
     });
