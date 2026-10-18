@@ -2,11 +2,13 @@ const express = require('express');
 const { body } = require('express-validator');
 const { createExam } = require('../controllers/examController');
 const validateRequest = require('../middlewares/validator');
+const verifyToken = require('../middlewares/authMiddleware'); // Importar el middleware de seguridad
 
 const router = express.Router();
 
 router.post(
   '/',
+  verifyToken, // Agregar verifyToken aquí para proteger la ruta contra IDOR
   [
     body('patientId').isMongoId().withMessage('ID de paciente inválido o faltante'),
     body('od.sphere').isNumeric().withMessage('OD sphere debe ser un número'),
