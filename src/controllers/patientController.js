@@ -1,4 +1,5 @@
 const Patient = require('../models/patient');
+const Exam = require('../models/exam');
 
 
 // GET: Obtener todos los pacientes
@@ -102,6 +103,7 @@ const deletePatient = async (req, res, next) => {
   try {
     const { id } = req.params;
 
+    // 1. Buscar y eliminar el paciente
     const deletedPatient = await Patient.findByIdAndDelete(id);
 
     if (!deletedPatient) {
@@ -111,10 +113,16 @@ const deletePatient = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
+    // Borrar todos los exámenes asociados a este paciente
+    const deletedExams = await Exam.deleteMany({ patientId: id });
+
+    return res.status(200).json({
       success: true,
-      message: 'Paciente eliminado correctamente',
-      data: deletedPatient
+      message: 'Paciente y sus exámenes asociados eliminados correctamente',
+      data: {
+        patient: deletedPatient,
+        examsDeletedCount: deletedExams.deletedCount
+      }
     });
   } catch (error) {
     next(error);
