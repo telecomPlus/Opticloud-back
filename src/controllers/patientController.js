@@ -1,28 +1,26 @@
-const Patient = require('../models/patient');
-const Exam = require('../models/exam');
-
+const {
+  getAllPatientsService,
+  getPatientByIdService,
+  createPatientService,
+  updatePatientService,
+  deletePatientService
+} = require('../services/patientService');
 
 // GET: Obtener todos los pacientes
-const getPatients = async (req, res) => {
-    try {
-        const patients = await Patient.find();
-        
-        // Retornar directamente el arreglo en lugar del objeto envuelto
-        return res.status(200).json(patients);
-    } catch (error) {
-        return res.status(500).json({ 
-            message: 'Error al obtener los pacientes.', 
-            error: error.message 
-        });
-    }
+const getPatients = async (req, res, next) => {
+  try {
+    const patients = await getAllPatientsService();
+    return res.status(200).json(patients);
+  } catch (error) {
+    next(error);
+  }
 };
 
-// GET: Obtener un solo paciente por ID
 // GET: Obtener un solo paciente por ID
 const getPatientById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const patient = await Patient.findById(id);
+    const patient = await getPatientByIdService(id);
 
     if (!patient) {
       return res.status(404).json({
@@ -40,50 +38,12 @@ const getPatientById = async (req, res, next) => {
   }
 };
 
-const updatePatient = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { email, phone, address } = req.body;
-
-    const updatedPatient = await Patient.findByIdAndUpdate(
-      id,
-      { email, phone, address },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedPatient) {
-      return res.status(404).json({
-        success: false,
-        message: 'Paciente no encontrado en la base de datos.'
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Información del paciente actualizada correctamente',
-      data: updatedPatient
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ success: false, message: 'El email ingresado ya está registrado por otro paciente.' });
-    }
-    next(error);
-  }
-};
-
+// POST: Crear un nuevo paciente
 const createPatient = async (req, res, next) => {
   try {
-    const { name, email, phone, address, documentNumber } = req.body;
+    const newPatient = await createPatientService(req.body);
 
-    const newPatient = await Patient.create({
-      name,
-      email,
-      phone,
-      address,
-      documentNumber
-    });
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Paciente creado correctamente',
       data: newPatient
@@ -99,29 +59,53 @@ const createPatient = async (req, res, next) => {
   }
 };
 
+// PUT: Actualizar paciente
+const updatePatient = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { email, phone, address } = req.body;
+
+    const updatedPatient = await updatePatientService(id, { email, phone, address });
+
+    if (!updatedPatient) {
+      return res.status(404).json({
+        success: false,
+        message: 'Paciente no encontrado en la base de datos.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Información del paciente actualizada correctamente',
+      data: updatedPatient
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ success: false, message: 'El email ingresado ya está registrado por otro paciente.' });
+    }
+    next(error);
+  }
+};
+
+// DELETE: Eliminar paciente (con cascada incluida gracias al servicio)
 const deletePatient = async (req, res, next) => {
   try {
     const { id } = req.params;
+    const result = await deletePatientService(id);
 
-    // 1. Buscar y eliminar el paciente
-    const deletedPatient = await Patient.findByIdAndDelete(id);
-
-    if (!deletedPatient) {
+    if (!result) {
       return res.status(404).json({
         success: false,
         message: 'Paciente no encontrado'
       });
     }
 
-    // Borrar todos los exámenes asociados a este paciente
-    const deletedExams = await Exam.deleteMany({ patientId: id });
-
     return res.status(200).json({
       success: true,
       message: 'Paciente y sus exámenes asociados eliminados correctamente',
       data: {
-        patient: deletedPatient,
-        examsDeletedCount: deletedExams.deletedCount
+        patient: result.deletedPatient,
+        examsDeletedCount: result.examsDeletedCount
       }
     });
   } catch (error) {
