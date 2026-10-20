@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const { 
   getPatients, 
   getPatientById, 
@@ -9,67 +9,62 @@ const {
 } = require('../controllers/patientController');
 const { getPatientExams } = require('../controllers/examController');
 const validateRequest = require('../middlewares/validator');
+const verifyToken = require('../middlewares/authMiddleware'); // <--- Importar middleware de seguridad
 
 const router = express.Router();
 
+router.get('/', verifyToken, getPatients);
 
-// Obtener todos los pacientes
-router.get('/', getPatients);
-
-// Obtener un paciente específico por ID
 router.get(
   '/:id',
+  verifyToken, 
   [
-    param('id').isMongoId().withMessage('ID de paciente inválido')
+    param('id').isMongoId().withMessage('ID de paciente inválido'),
+    validateRequest
   ],
   getPatientById
 );
-// Crear un nuevo paciente
+
 router.post(
   '/',
+  verifyToken, 
   [
-    body('name').notEmpty().withMessage('El nombre es obligatorio').isString().withMessage('El nombre debe ser texto'),
+    body('name').notEmpty().withMessage('El nombre es obligatorio').isString(),
     body('email').isEmail().withMessage('El formato del email es inválido'),
-    body('phone').isNumeric().withMessage('El teléfono solo debe contener números').isLength({ min: 7, max: 15 }).withMessage('El teléfono debe tener entre 7 y 15 dígitos'),
-    body('address').optional().isString().withMessage('La dirección debe ser una cadena de texto'),
+    body('phone').isNumeric().withMessage('El teléfono solo debe contener números'),
     body('documentNumber').notEmpty().withMessage('El número de documento es obligatorio'),
     validateRequest
   ],
   createPatient
 );
 
-// Actualizar información del paciente
 router.put(
   '/:id',
+  verifyToken, 
   [
     param('id').isMongoId().withMessage('ID de paciente inválido'),
-    body('email').optional().isEmail().withMessage('El formato del email es inválido'),
-    body('phone').optional().isNumeric().withMessage('El teléfono solo debe contener números').isLength({ min: 7, max: 15 }).withMessage('El teléfono debe tener entre 7 y 15 dígitos'),
-    body('address').optional().isString().withMessage('La dirección debe ser una cadena de texto'),
     validateRequest
   ],
   updatePatient
 );
 
-// Obtener exámenes de un paciente
 router.get(
   '/:patientId/exams',
+  verifyToken, 
   [
     param('patientId').isMongoId().withMessage('ID de paciente inválido'),
+    query('page').optional({ nullable: true }).isInt({ min: 1 }).withMessage('page debe ser un número entero mayor o igual a 1'),
+    query('limit').optional({ nullable: true }).isInt({ min: 1, max: 100 }).withMessage('limit debe ser un número entero entre 1 y 100'),
     validateRequest
   ],
   getPatientExams
 );
 
-
 router.delete(
   '/:id',
+  verifyToken, 
   [
-    param('id')
-      .notEmpty()
-      .withMessage('El ID del paciente es obligatorio')
-      .isMongoId()
-      .withMessage('El ID del paciente no es válido')
+    param('id').isMongoId().isString().withMessage('El ID no es válido')
   ],
   deletePatient
 );
