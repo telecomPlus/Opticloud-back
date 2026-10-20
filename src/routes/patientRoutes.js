@@ -1,5 +1,5 @@
 const express = require('express');
-const { body, param } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const { 
   getPatients, 
   getPatientById, 
@@ -53,6 +53,8 @@ router.get(
   verifyToken, 
   [
     param('patientId').isMongoId().withMessage('ID de paciente inválido'),
+    query('page').optional({ nullable: true }).isInt({ min: 1 }).withMessage('page debe ser un número entero mayor o igual a 1'),
+    query('limit').optional({ nullable: true }).isInt({ min: 1, max: 100 }).withMessage('limit debe ser un número entero entre 1 y 100'),
     validateRequest
   ],
   getPatientExams

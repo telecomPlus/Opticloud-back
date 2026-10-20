@@ -1,63 +1,156 @@
-const Exam = require('../models/exam');
-const Patient = require('../models/patient');
+const {
+  createExamService,
+  getExamByIdService,
+  getAllExamsService,
+  getPatientExamsService,
+  updateExamService
+} = require('../services/examService');
 
+/**
+ * POST /api/v1/exams
+ * Registra un examen asociado a un paciente existente.
+ */
 const createExam = async (req, res, next) => {
   try {
-    const { patientId, od, os, notes } = req.body;
+    const result = await createExamService(req.body, req.user?.id);
 
-    const patientExists = await Patient.findById(patientId);
-    if (!patientExists) {
+    if (result.notFound) {
       return res.status(404).json({
         success: false,
-        message: 'El paciente especificado no existe en el sistema.'
+        message: result.message
       });
     }
 
-    const newExam = await Exam.create({ patientId, od, os, notes });
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Examen registrado exitosamente.',
-      data: newExam
+      data: result.data
     });
   } catch (error) {
     next(error);
   }
 };
 
-const getPatientExams = async (req, res, next) => {
+/**
+ * GET /api/v1/exams/:id
+ * Consulta el detalle de un examen por su ID.
+ */
+const getExamById = async (req, res, next) => {
   try {
-    const { patientId } = req.params;
+    const { id } = req.params;
+    const exam = await getExamByIdService(id);
 
-    const patientExists = await Patient.findById(patientId);
-    if (!patientExists) {
+    if (!exam) {
       return res.status(404).json({
         success: false,
-        message: 'El paciente especificado no existe en el sistema.'
+        message: 'Examen no encontrado en el sistema.'
       });
     }
 
-    const exams = await Exam.find({ patientId })
-      .sort({ createdAt: -1 })
-      .select('-updatedAt -__v');
+    return res.status(200).json({
+      success: true,
+      data: exam
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
-    if (exams.length === 0) {
+/**
+ * GET /api/v1/exams
+ * Lista exámenes con filtros y paginación en orden descendente.
+ */
+const getExams = async (req, res, next) => {
+  try {
+    const { patientId, examType, startDate, endDate, page, limit } = req.query;
+
+    const result = await getAllExamsService(
+      { patientId, examType, startDate, endDate },
+      { page, limit }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: 'Exámenes recuperados exitosamente.',
+      count: result.exams.length,
+      pagination: result.pagination,
+      data: result.exams
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/v1/patients/:patientId/exams
+ * Consulta el historial de exámenes de un paciente.
+ */
+const getPatientExams = async (req, res, next) => {
+  try {
+    const { patientId } = req.params;
+    const { page, limit } = req.query;
+
+    const result = await getPatientExamsService(patientId, { page, limit });
+
+    if (result.notFound) {
+      return res.status(404).json({
+        success: false,
+        message: result.message
+      });
+    }
+
+    if (result.exams.length === 0) {
       return res.status(200).json({
         success: true,
         message: 'El paciente no tiene exámenes registrados.',
+        count: 0,
+        pagination: result.pagination,
         data: []
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: 'Historial de exámenes recuperado exitosamente.',
-      count: exams.length,
-      data: exams
+      count: result.exams.length,
+      pagination: result.pagination,
+      data: result.exams
     });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports = { createExam, getPatientExams };
+/**
+ * PUT /api/v1/exams/:id o PATCH /api/v1/exams/:id
+ * Actualiza los datos de un examen clínico.
+ */
+const updateExam = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await updateExamService(id, req.body);
+
+    if (result.notFound) {
+      return res.status(404).json({
+        success: false,
+        message: result.message
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Examen actualizado exitosamente.',
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  createExam,
+  getExamById,
+  getExams,
+  getPatientExams,
+  updateExam
+};
